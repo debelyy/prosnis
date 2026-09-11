@@ -282,26 +282,17 @@ kbd.slash{
   display:flex;align-items:center;justify-content:center;
 }
 .empty-mark::after{content:"";width:12px;height:12px;border:1px solid var(--ink-faint);border-radius:0;transform:rotate(45deg)}
-.empty-title{font-size:13px;font-weight:500;color:var(--ink-soft);position:relative}
-.empty-sub{font-size:12px;color:var(--ink-faint);line-height:1.55;position:relative}
+.empty-title{font-family:var(--jp);font-size:16px;font-weight:400;letter-spacing:.02em;color:var(--ink-soft);position:relative}
+.empty-sub{font-size:12px;color:var(--ink-soft);line-height:1.55;position:relative}
 .empty-sub kbd{
   font-family:var(--mono);font-size:10px;border:1px solid var(--hairline);
   border-bottom-width:2px;border-radius:2px;padding:1px 6px;background:rgba(250,249,247,.6);color:var(--ink-soft);
 }
-/* призрачный кандзи-водяной знак в пустых состояниях: пепел и пыль — ма, один знак */
-.empty-inbox::after,.empty-ledger::after{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-54%);
-  font-family:var(--jp);font-size:110px;line-height:1;pointer-events:none;
-  color:rgba(46,48,51,.045);
-}
-.empty-inbox::after{content:"灰"}
-.empty-ledger::after{content:"塵"}
 .empty-ledger{
   position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:9px;padding:28px 14px;text-align:center;overflow:hidden;
 }
 .el-rail{width:1px;height:26px;background:var(--hairline);position:relative}
-.empty-ledger .empty-title{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;position:relative;color:var(--ink-soft)}
 .empty-ledger .empty-sub{position:relative}
 
 /* ---------- карточка ---------- */
@@ -654,7 +645,7 @@ a.handle{color:var(--ink-soft);text-decoration:none}
     <div class="logo">
       <img class="logo-img" src="assets/logo.png" alt="просnись">
       <div>
-        <h1>проснись<span class="v">v17</span></h1>
+        <h1>проснись<span class="v">v18</span></h1>
         <small id="todayLabel"></small>
       </div>
     </div>
@@ -1951,7 +1942,7 @@ var reducedMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: re
           paint: { enable: true, fill: { color: { value: ["#5a5a5e","#82828a","#4c4c50","#c9c9cd"] } } },
           opacity: { value: { min: 0.18, max: 0.5 }, animation: { enable: true, speed: 0.5, sync: false } },
           size: { value: { min: 0.8, max: 2.2 } },
-          move: { enable: true, direction: "bottom", speed: { min: 0.35, max: 1 }, random: true, drift: { min: 0, max: 1.5 }, outModes: { default: "out" } }
+          move: { enable: true, direction: "bottom", speed: { min: 0.12, max: 0.45 }, random: true, drift: { min: 0, max: 0.8 }, outModes: { default: "out" } }
         }
       }
     });
