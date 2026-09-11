@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
-/* ============ v16 «проснись — мгла»: холодный пепел, видео-герой (моно-грейд + Ken Burns), стекло blur+saturate, частицы tsParticles preset-fire, ханко 灰 · стволы 甲乙丙 · сэкки ============ */
+/* ============ «проснись — мгла»: холодный пепел, видео-герой (моно-грейд + Ken Burns), стекло blur+saturate, пепел-снег поверх доски (tsParticles), ханко 灰 в ритуале сжигания, стволы 甲乙丙, сэкки ============ */
 :root{
   --glass-dense:rgba(240,239,238,.92);
   --ink:#2e3033;
@@ -79,7 +79,7 @@ body::after{
   mix-blend-mode:soft-light;opacity:.06;
 }
 
-/* ---- v13: живые слои ---- */
+/* ---- живые слои ---- */
 .smoke{position:fixed;inset:-25%;z-index:-1;pointer-events:none;filter:blur(70px)}
 .smoke.s1{background:radial-gradient(42% 34% at 30% 35%, rgba(192,194,200,.18), transparent 70%);animation:drift1 62s ease-in-out infinite alternate}
 .smoke.s2{background:radial-gradient(36% 30% at 68% 60%, rgba(201,138,94,.11), transparent 70%),radial-gradient(30% 26% at 80% 22%, rgba(160,162,168,.13), transparent 70%);animation:drift2 84s ease-in-out infinite alternate}
@@ -126,7 +126,6 @@ header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   font-family:var(--jp);font-size:23px;font-weight:400;letter-spacing:0;
   color:#ececea;
 }
-.logo h1 .v{color:rgba(237,236,235,.4);font-weight:400;letter-spacing:.06em;font-family:var(--mono);font-size:10px;margin-left:6px}
 .logo small{display:block;font-family:var(--mono);font-size:10px;color:rgba(237,236,235,.45);letter-spacing:.1em;margin-top:1px}
 .head-right{margin-left:auto;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 
@@ -165,8 +164,6 @@ header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   transition:transform .12s var(--ease-out),opacity .1s ease-out;
 }
 .hanko-hit.on{opacity:.94;transform:translate(-50%,-50%) rotate(var(--hrot,-7deg)) scale(1)}
-/* мини-оттиск в строке леджера — печать в бухгалтерской книге */
-.hanko-mini{width:15px;height:15px;font-size:9.5px;border-radius:2px 3px 2px 3px;transform:rotate(-3deg);opacity:.85}
 
 .btn{
   font-weight:500;font-size:13px;border:1px solid rgba(237,236,235,.28);border-radius:var(--r-control);
@@ -438,20 +435,21 @@ a.handle{color:var(--ink-soft);text-decoration:none}
 /* ---------- леджер ---------- */
 .ledger-filters{display:flex;gap:4px;flex-wrap:wrap;padding:0 2px}
 .f-chip{
-  font-family:var(--mono);font-size:9.5px;border:1px solid var(--hairline);background:rgba(250,249,247,.55);
-  color:var(--ink-soft);border-radius:2px;padding:2px 8px;
-  transition:border-color var(--dur-hover) var(--ease-out),color var(--dur-hover) var(--ease-out);
+  font-family:var(--mono);font-size:9px;border:1px solid var(--hairline);background:rgba(250,249,247,.35);
+  color:var(--ink-soft);border-radius:2px;padding:3px 9px;letter-spacing:.06em;
+  transition:border-color var(--dur-hover) var(--ease-out),color var(--dur-hover) var(--ease-out),background var(--dur-hover) var(--ease-out);
   display:inline-flex;align-items:center;gap:5px;
 }
 .f-chip .dot{width:5px;height:5px;border-radius:0;background:hsl(var(--h,40) 34% 42%);opacity:.6;flex:none}
 .f-chip .dot.solid{opacity:1}
-.f-chip.on{border-color:var(--ink);color:var(--ink)}
-@media(hover:hover){ .f-chip:hover{border-color:var(--hairline-strong);color:var(--ink-soft)} }
+/* активный фильтр — инверсия: тёмная заливка, светлый текст (Signalis) */
+.f-chip.on{border-color:var(--ink);background:var(--ink);color:#ececea}
+@media(hover:hover){ .f-chip:not(.on):hover{border-color:var(--hairline-strong);color:var(--ink)} }
 
 .lgroup{position:relative;padding-left:16px}
 .lgroup::before{content:"";position:absolute;left:5px;top:26px;bottom:10px;border-left:1px solid var(--hairline-soft)}
 .gh{
-  position:sticky;top:0;z-index:2;background:rgba(238,237,236,.92);
+  position:sticky;top:0;z-index:2;background:rgba(236,235,233,.78);
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
   color:var(--ink-soft);padding:4px 2px 6px;margin-left:-16px;padding-left:18px;
@@ -465,7 +463,7 @@ a.handle{color:var(--ink-soft);text-decoration:none}
 .lr-top .t{flex:1;font-size:13px;font-weight:600;line-height:1.3;word-break:break-word;min-width:0;color:var(--ink)}
 .lres{
   display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9.5px;
-  color:var(--rc,var(--ink-soft));border:1px solid var(--hairline);background:rgba(250,249,247,.55);border-radius:2px;padding:2px 8px;
+  color:var(--rc,var(--ink-soft));border:1px solid var(--hairline);background:rgba(250,249,247,.35);border-radius:2px;padding:2px 8px;
   transition:border-color var(--dur-hover) var(--ease-out),transform var(--dur-hover) var(--ease-out);white-space:nowrap;flex:none;
 }
 .lres .dot{width:5px;height:5px;border-radius:0;background:currentColor;flex:none}
@@ -645,7 +643,7 @@ a.handle{color:var(--ink-soft);text-decoration:none}
     <div class="logo">
       <img class="logo-img" src="assets/logo.png" alt="просnись">
       <div>
-        <h1>проснись<span class="v">v18</span></h1>
+        <h1>проснись</h1>
         <small id="todayLabel"></small>
       </div>
     </div>
@@ -1438,7 +1436,6 @@ function ledgerRow(it){
   row.appendChild(top);
 
   var sub = el("div","lr-sub");
-  sub.appendChild(el("span","hanko hanko-mini","灰"));
   sub.appendChild(el("span","lr-hash",serialNo(it)));
   sub.appendChild(el("span","when", dateTimeLabel(it.doneAt || it.createdAt)));
   it.accounts.forEach(function(aid){
@@ -1921,7 +1918,7 @@ if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches){
   if(bgv) bgv.pause();
 }
 
-/* ================= v15: живые слои (видео — герой, пепел оседает, угли тлеют) ================= */
+/* ================= живые слои: видео — герой, пепел оседает ================= */
 var reducedMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* пепел поверх доски: серые моты оседают сверху вниз; тёмные видны на стекле, светлые — на видео */
@@ -1938,11 +1935,11 @@ var reducedMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: re
         fpsLimit: 30, smooth: true, detectRetina: true,
         pauseOnBlur: true, pauseOnOutsideViewport: true,
         particles: {
-          number: { value: 55, density: { enable: false } },
+          number: { value: 26, density: { enable: false } },
           paint: { enable: true, fill: { color: { value: ["#5a5a5e","#82828a","#4c4c50","#c9c9cd"] } } },
-          opacity: { value: { min: 0.18, max: 0.5 }, animation: { enable: true, speed: 0.5, sync: false } },
-          size: { value: { min: 0.8, max: 2.2 } },
-          move: { enable: true, direction: "bottom", speed: { min: 0.12, max: 0.45 }, random: true, drift: { min: 0, max: 0.8 }, outModes: { default: "out" } }
+          opacity: { value: { min: 0.16, max: 0.42 }, animation: { enable: true, speed: 0.4, sync: false } },
+          size: { value: { min: 0.8, max: 2 } },
+          move: { enable: true, direction: "bottom", speed: { min: 0.08, max: 0.3 }, random: false, drift: { min: 0, max: 0.25 }, straight: false, outModes: { default: "out" } }
         }
       }
     });
