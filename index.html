@@ -241,7 +241,7 @@ kbd.slash{
   display:flex;align-items:center;gap:9px;padding:0 2px 7px}
 .col-head h2{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
 .count{
-  font-family:var(--mono);font-size:10px;font-weight:500;font-variant-numeric:tabular-nums;
+  font-family:var(--mono);font-size:10px;font-weight:500;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";
   border:1px solid var(--hairline);border-radius:var(--r-control);padding:1px 7px;color:var(--ink-soft);background:rgba(250,249,247,.55);
 }
 .col-tool{margin-left:auto}
@@ -257,6 +257,9 @@ kbd.slash{
 /* кейкап: плотное дно 2px у всех контролов; пресс — сдвиг, геометрия ровная */
 .btn,.act,.mini-btn,.acc,.res,.f-chip,.lres,.pop-opt,.lback{border-bottom-width:2px}
 .btn:active,.act:active,.mini-btn:active,.acc:active,.res:active,.f-chip:active,.lres:active,.pop-opt:active,.lback:active{transform:translate(1px,1px)}
+#pickBtn{transition:transform .25s ease-out,border-color var(--dur-hover) var(--ease-out),color var(--dur-hover) var(--ease-out),background var(--dur-hover) var(--ease-out)}
+@media(hover:hover){ .card:hover .identi{border-color:var(--hairline-strong)} }
+.identi{transition:border-color var(--dur-hover) var(--ease-out)}
 .col-sub{font-size:12px;color:var(--ink-soft);padding:0 2px;margin-top:2px;line-height:1.45}
 .col-sub.warn{color:var(--amber)}
 .col-body{overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0;padding:2px;flex:1}
@@ -294,23 +297,44 @@ kbd.slash{
 
 /* ---------- карточка ---------- */
 .card{
-  position:relative;
-  background:var(--specks),linear-gradient(180deg,rgba(251,250,248,.58),rgba(247,246,244,.54));
+  position:relative;cursor:pointer;
+  background:var(--specks),linear-gradient(180deg,rgba(252,251,249,.82),rgba(248,247,245,.75));
   background-size:300px,auto;
   border:1px solid var(--hairline);border-radius:3px;
   padding:12px;
-  transition:border-color var(--dur-hover) var(--ease-out),background-color var(--dur-hover) var(--ease-out),transform var(--dur-hover) var(--ease-out);
+  box-shadow:0 1px 2px rgba(20,20,22,.05),0 5px 14px -10px rgba(20,20,22,.22);
+  transition:border-color 140ms ease,box-shadow 180ms var(--ease-out),transform 180ms var(--ease-out);
 }
 /* вход карточки — не из нуля, а приседание */
-.card-in{animation:cardIn .32s var(--ease-out) both}
+.card-in{animation:cardIn .28s var(--ease-out) both}
 @keyframes cardIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 /* ритуал: обугливание перед рассыпанием */
 .card.burning{filter:brightness(.5) saturate(.4);transform:scale(.985)!important;transition:filter .2s ease-in,transform .2s ease-in}
 @media(hover:hover){
-  .card:hover{border-color:var(--hairline-strong);transform:translateY(-1px)}
+  .card:hover{border-color:var(--hairline-strong);transform:translateY(-2px);box-shadow:0 2px 3px rgba(20,20,22,.06),0 14px 28px -12px rgba(20,20,22,.3)}
 }
+.card:active{transform:translateY(0) scale(.98);transition-duration:120ms}
+/* drag&drop: карточка — grip, оригинал блёкнет на месте (Atlassian: dim, не scale) */
+.card[draggable="true"]{cursor:grab}
+.card.dragging{opacity:.4;cursor:grabbing}
+/* фокус на одной: соседи в колонке приглушаются */
+@media(hover:hover){
+  .col-body:hover .card:not(:hover):not(.dragging){opacity:.55}
+}
+/* действия карточки тихие до ховера — меньше шума, полная видимость по фокусу */
+@media(hover:hover){
+  .card-actions{opacity:.45;transition:opacity 150ms var(--ease-out)}
+  .card:hover .card-actions,.card:focus-within .card-actions{opacity:1}
+}
+.slot-wrap{border-radius:3px;outline:1px dashed transparent;outline-offset:3px;transition:outline-color var(--dur-hover) var(--ease-out)}
+body.dnd-on .slot-wrap{outline-color:rgba(60,60,67,.3)}
+body.dnd-on .slot-empty{border-color:rgba(138,117,80,.55);color:var(--amber)}
+.slot-wrap.drop-hot{outline:2px solid var(--ink);background:rgba(46,48,51,.05)}
+#inboxList{border-radius:3px;outline:1px dashed transparent;outline-offset:2px;transition:outline-color var(--dur-hover) var(--ease-out)}
+body.dnd-on #inboxList{outline-color:rgba(60,60,67,.3)}
+#inboxList.drop-hot{outline:2px solid var(--ink)}
 .card.in-slot{
-  background:var(--specks),linear-gradient(180deg,rgba(251,250,248,.72),rgba(247,246,244,.66));
+  background:var(--specks),linear-gradient(180deg,rgba(252,251,249,.9),rgba(248,247,245,.84));
   background-size:300px,auto;
   border-color:var(--hairline-strong);
   border-left:2px solid rgba(46,48,51,.55);
@@ -329,6 +353,7 @@ kbd.slash{
 .card-title{
   font-family:var(--sans);font-weight:600;letter-spacing:-.01em;
   font-size:13.5px;line-height:1.35;word-break:break-word;cursor:text;
+  text-wrap:balance;
   color:var(--ink);
   border-radius:2px;padding:1px 3px;margin:-1px -3px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
@@ -348,6 +373,17 @@ a.handle{color:var(--ink-soft);text-decoration:none}
 @media(hover:hover){ a.handle:hover{color:var(--ink);border-color:var(--hairline-strong)} }
 .tag.age-hot{border-color:rgba(138,117,80,.45);color:var(--amber)}
 .tag.note-dot{color:var(--ink-soft)}
+.tag.dl{cursor:pointer;color:var(--ink)}
+@media(hover:hover){ .tag.dl:hover{border-color:var(--hairline-strong)} }
+.tag.dl-soon{border-color:rgba(138,117,80,.55);color:var(--amber)}
+.tag.dl-over{border-color:rgba(138,90,84,.6);color:var(--red)}
+.act.dl-on{border-color:var(--hairline-strong);color:var(--ink)}
+.pop-h{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);padding:5px 9px 1px}
+.pop-row{display:flex;gap:3px;padding:2px 4px}
+.pop-row .pop-opt{flex:1;justify-content:center;padding:6px 4px}
+.pop input[type=date]{font-family:var(--mono);font-size:11px;padding:6px 8px;border:1px solid var(--hairline);border-radius:2px;background:rgba(250,249,247,.75);color:var(--ink);outline:none;margin:2px 5px 4px;width:calc(100% - 10px)}
+.stat.hot .lbl{color:rgba(232,177,131,.7)}
+.stat.hot .num{color:#e8b183}
 .card-actions{display:flex;gap:5px;margin-top:8px;align-items:center;flex-wrap:wrap}
 .act{
   height:26px;min-width:26px;padding:0 6px;border-radius:2px;border:1px solid var(--hairline);background:rgba(250,249,247,.5);
@@ -656,6 +692,10 @@ a.handle{color:var(--ink-soft);text-decoration:none}
         <div class="lbl">серия дней<span class="ember" id="streakEmber"></span></div>
         <div class="num" id="streakCount">0</div>
       </div>
+      <div class="stat hot hidden" id="hotStat" title="Дедлайн сегодня или уже просрочен">
+        <div class="lbl">горит</div>
+        <div class="num"><em id="hotCount">0</em></div>
+      </div>
       <button class="btn" id="focusModeBtn" title="Всё гаснет, кроме одной текущей карточки (Esc — выйти)"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><line x1='22' x2='18' y1='12' y2='12'/><line x1='6' x2='2' y1='12' y2='12'/><line x1='12' x2='12' y1='6' y2='2'/><line x1='12' x2='12' y1='22' y2='18'/></svg>Одно дело</button>
       <button class="btn" id="drawerBtn" title="Аккаунты фермы, экспорт и импорт"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10 5H3'/><path d='M12 19H3'/><path d='M14 3v4'/><path d='M16 17v4'/><path d='M21 12h-9'/><path d='M21 19h-5'/><path d='M21 5h-7'/><path d='M8 10v4'/><path d='M8 12H3'/></svg></button>
     </div>
@@ -673,7 +713,7 @@ a.handle{color:var(--ink-soft);text-decoration:none}
       <div class="col-head">
         <span class="zi">01</span><h2>Инбокс</h2><span class="count" id="inboxCount">0</span>
       </div>
-      <div class="col-sub">свежие дропы — разберёшь потом</div>
+      <div class="col-sub">свежие дропы — тяни в слот или разбери потом</div>
       <div class="col-body" id="inboxList"></div>
     </section>
 
@@ -730,7 +770,7 @@ a.handle{color:var(--ink-soft);text-decoration:none}
       <input type="file" id="importFile" accept="application/json" hidden>
       <input type="file" id="importTxtFile" accept=".txt,text/plain" hidden>
     </div>
-    <p class="dr-note" style="margin-top:8px">Всё хранится локально (localStorage), никуда не улетает. JSON — резервная копия, TXT — пачка ссылок по одной на строку.</p>
+    <p class="dr-note" style="margin-top:8px">Всё хранится локально (localStorage), никуда не улетает. JSON — резервная копия, TXT — пачка ссылок по одной на строку.<br><span id="exportAge"></span></p>
   </section>
 </aside>
 
@@ -771,7 +811,8 @@ var ICONS = {
   "pen-line": '<path d="M13 21h8"/><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>',
   "stamp": '<path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-6 0c0 2 1 2 1 3.5V13"/><path d="M20 15.5a2.5 2.5 0 0 0-2.5-2.5h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1z"/><path d="M5 22h14"/>',
   "undo-2": '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/>',
-  "x": '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+  "x": '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  "calendar": '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>'
 };
 function icon(name, size){
   var s = document.createElement("span");
@@ -876,6 +917,7 @@ function addItem(data){
     accounts: [],
     result: null,
     notes: "",
+    deadline: null,
     createdAt: Date.now(),
     workAt: null,
     doneAt: null
@@ -1058,8 +1100,7 @@ var popEl = null;
 function closePop(){
   if(popEl){ popEl.remove(); popEl = null; }
   document.removeEventListener("mousedown", popOutside, true);
-  var ll = $("#ledgerList");
-  if(ll) ll.removeEventListener("scroll", closePop);
+  document.removeEventListener("scroll", closePop, true);
 }
 function popOutside(e){ if(popEl && !popEl.contains(e.target)) closePop(); }
 function openResultPop(anchor, it){
@@ -1083,6 +1124,10 @@ function openResultPop(anchor, it){
     });
     p.appendChild(b);
   });
+  openPop(anchor, p);
+}
+/* позиционирование и жизнь любого поповера; закрывается скроллом любой колонки */
+function openPop(anchor, p){
   document.body.appendChild(p);
   popEl = p;
   var rect = anchor.getBoundingClientRect();
@@ -1096,8 +1141,70 @@ function openResultPop(anchor, it){
   p.style.top = y + "px";
   setTimeout(function(){
     document.addEventListener("mousedown", popOutside, true);
-    $("#ledgerList").addEventListener("scroll", closePop);
+    document.addEventListener("scroll", closePop, true);
   }, 0);
+}
+
+/* ================= дедлайны ================= */
+function dateShort(ts){
+  var d = new Date(ts);
+  return ("0"+d.getDate()).slice(-2) + "." + ("0"+(d.getMonth()+1)).slice(-2);
+}
+function deadlineInfo(it){
+  if(!it.deadline) return null;
+  var days = Math.round((dayStart(it.deadline) - dayStart(Date.now())) / 86400000);
+  if(days < 0)  return { label: "просрочено" + (days < -1 ? " " + (-days) + " дн" : ""), cls: "dl-over", days: days };
+  if(days === 0) return { label: "сегодня", cls: "dl-over", days: days };
+  if(days === 1) return { label: "завтра", cls: "dl-soon", days: days };
+  return { label: days + " дн", cls: "", days: days };
+}
+function deadlineTagEl(it){
+  var di = deadlineInfo(it);
+  if(!di) return null;
+  var t = el("button","tag dl" + (di.cls ? " " + di.cls : ""));
+  t.appendChild(icon("calendar",9));
+  t.appendChild(document.createTextNode(di.label));
+  t.title = "Дедлайн — клик, чтобы изменить";
+  t.addEventListener("click", function(){ openDeadlinePop(t, it); });
+  return t;
+}
+function openDeadlinePop(anchor, it){
+  closePop();
+  var prev = it.deadline;
+  var p = el("div","pop");
+  p.appendChild(el("div","pop-h","дедлайн"));
+  var row = el("div","pop-row");
+  [["завтра",1],["+3 дн",3],["+7 дн",7]].forEach(function(cfg){
+    var b = el("button","pop-opt",cfg[0]);
+    b.addEventListener("click", function(){ setDeadline(dayStart(Date.now()) + cfg[1]*86400000); });
+    row.appendChild(b);
+  });
+  p.appendChild(row);
+  var di = document.createElement("input");
+  di.type = "date";
+  if(it.deadline){
+    var d = new Date(it.deadline);
+    di.value = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0"+d.getDate()).slice(-2);
+  }
+  di.addEventListener("change", function(){
+    if(!di.value) return;
+    var parts = di.value.split("-");
+    setDeadline(new Date(+parts[0], +parts[1]-1, +parts[2]).getTime());
+  });
+  p.appendChild(di);
+  if(it.deadline){
+    var clr = el("button","pop-opt","убрать дедлайн");
+    clr.addEventListener("click", function(){ setDeadline(null); });
+    p.appendChild(clr);
+  }
+  function setDeadline(ts){
+    it.deadline = ts;
+    save();
+    closePop();
+    renderAll();
+    showToast(ts ? "Дедлайн: " + dateShort(ts) : "Дедлайн убран", function(){ it.deadline = prev; save(); });
+  }
+  openPop(anchor, p);
 }
 
 /* ================= рендер: шапка ================= */
@@ -1106,6 +1213,13 @@ function renderHeader(){
     return it.status === "done" && isToday(it.doneAt || 0);
   }).length;
   $("#doneTodayCount").textContent = doneToday;
+
+  /* горящие дедлайны: сегодня или хуже, по недоделанным */
+  var hot = state.items.filter(function(it){
+    return it.status !== "done" && it.deadline && dayStart(it.deadline) <= dayStart(Date.now());
+  }).length;
+  $("#hotStat").classList.toggle("hidden", hot === 0);
+  $("#hotCount").textContent = hot;
 
   var days = {};
   state.items.forEach(function(it){
@@ -1188,8 +1302,18 @@ function resRowFor(it){
 
 /* ================= рендер: карточка ================= */
 var openNotes = {};
+function toggleNotes(it){
+  openNotes[it.id] = !openNotes[it.id];
+  renderAll();
+  if(openNotes[it.id]){
+    var ta = document.querySelector('.card[data-id="'+it.id+'"] .card-notes textarea');
+    if(ta) ta.focus();
+  }
+}
 /* свежие карточки входят каскадом (stagger 45ms, cap 300ms) */
 var freshIds = {}, freshOrder = 0;
+/* id перетаскиваемой карточки */
+var dragId = null;
 
 function titleEl(it){
   var t = el("div","card-title",it.title);
@@ -1253,6 +1377,8 @@ function cardEl(it, inSlot){
     age.textContent = ageLabel(it.createdAt) + " · пылится";
   }
   meta.appendChild(age);
+  var dtag = deadlineTagEl(it);
+  if(dtag) meta.appendChild(dtag);
   if(it.notes && it.notes.trim()){
     var nt = el("span","tag note-dot");
     nt.appendChild(icon("pen-line",9));
@@ -1290,17 +1416,16 @@ function cardEl(it, inSlot){
     acts.appendChild(doneB);
   }
 
+  var dlB = el("button","act" + (it.deadline ? " dl-on" : ""));
+  dlB.appendChild(icon("calendar",12));
+  dlB.title = it.deadline ? "Дедлайн — изменить" : "Поставить дедлайн";
+  dlB.addEventListener("click", function(){ openDeadlinePop(dlB, it); });
+  acts.appendChild(dlB);
+
   var noteB = el("button","act" + (openNotes[it.id] ? " note-on" : ""));
   noteB.appendChild(icon("pen-line",12));
   noteB.title = "Заметки";
-  noteB.addEventListener("click", function(){
-    openNotes[it.id] = !openNotes[it.id];
-    renderAll();
-    if(openNotes[it.id]){
-      var ta = document.querySelector('.card[data-id="'+it.id+'"] .card-notes textarea');
-      if(ta) ta.focus();
-    }
-  });
+  noteB.addEventListener("click", function(){ toggleNotes(it); });
   acts.appendChild(noteB);
 
   var delB = el("button","act del-b");
@@ -1330,16 +1455,39 @@ function cardEl(it, inSlot){
   notesWrap.appendChild(ta);
   c.appendChild(notesWrap);
 
+  /* вся карточка — кнопка: клик мимо контролов раскрывает заметки */
+  c.addEventListener("click", function(e){
+    if(e.target.closest("button,a,input,textarea,.card-title")) return;
+    toggleNotes(it);
+  });
+
+  /* drag&drop: тянешь карточку — слоты и инбокс открываются приёмниками */
+  c.draggable = true;
+  c.addEventListener("dragstart", function(e){
+    dragId = it.id;
+    e.dataTransfer.setData("text/plain", String(it.id));
+    e.dataTransfer.effectAllowed = "move";
+    document.body.classList.add("dnd-on");
+    setTimeout(function(){ c.classList.add("dragging"); }, 0);
+  });
+  c.addEventListener("dragend", function(){
+    dragId = null;
+    c.classList.remove("dragging");
+    document.body.classList.remove("dnd-on");
+    document.querySelectorAll(".drop-hot").forEach(function(n){ n.classList.remove("drop-hot"); });
+  });
+
   return c;
 }
 
 /* ================= рендер: доска ================= */
 function renderBoard(){
   freshOrder = 0;
-  var inbox = byStatus("inbox");
+  var inboxAll = byStatus("inbox");
+  var inbox = filterQuery ? inboxAll.filter(matchesFilter) : inboxAll;
   var work = byStatus("work");
 
-  $("#inboxCount").textContent = inbox.length;
+  $("#inboxCount").textContent = filterQuery ? inbox.length + "/" + inboxAll.length : inbox.length;
   $("#workCount").textContent = work.length + "/3";
 
   /* сегментный бар лимита */
@@ -1355,7 +1503,13 @@ function renderBoard(){
 
   var list = $("#inboxList");
   list.innerHTML = "";
-  if(inbox.length === 0){
+  if(inbox.length === 0 && filterQuery){
+    var ef = el("div","empty-inbox");
+    ef.appendChild(el("span","empty-mark"));
+    ef.appendChild(el("div","empty-title","Не нашлось"));
+    ef.appendChild(el("div","empty-sub","в инбоксе по «" + filterQuery + "» пусто — Enter добавит новую карточку"));
+    list.appendChild(ef);
+  } else if(inbox.length === 0){
     var e = el("div","empty-inbox");
     e.appendChild(el("span","empty-mark"));
     e.appendChild(el("div","empty-title","Инбокс пуст"));
@@ -1382,7 +1536,23 @@ function renderBoard(){
   var slots = $("#slotsBox");
   slots.innerHTML = "";
   for(var j=0;j<segCount;j++){
-    var wrap = el("div");
+    var wrap = el("div","slot-wrap");
+    /* слот — приёмник: бросок сюда ставит карточку «в работе» */
+    wrap.addEventListener("dragover", function(e){
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      this.classList.add("drop-hot");
+    });
+    wrap.addEventListener("dragleave", function(e){
+      if(!this.contains(e.relatedTarget)) this.classList.remove("drop-hot");
+    });
+    wrap.addEventListener("drop", function(e){
+      e.preventDefault();
+      this.classList.remove("drop-hot");
+      var id = dragId || Number(e.dataTransfer.getData("text/plain"));
+      var it = findItem(id);
+      if(it && it.status !== "work"){ moveItem(id,"work"); renderAll(); flashExisting(id); }
+    });
     if(work[j]){
       var lab = el("div","slot-label" + (j >= 3 ? " over" : ""));
       lab.appendChild(el("span",null,"слот " + (j+1) + (j >= 3 ? " · лишний" : "")));
@@ -1412,6 +1582,26 @@ function pickRandom(){
   renderAll();
 }
 $("#pickBtn").addEventListener("click", pickRandom);
+
+/* инбокс — приёмник для возврата из «в работе» перетаскиванием */
+(function(){
+  var list = $("#inboxList");
+  list.addEventListener("dragover", function(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    list.classList.add("drop-hot");
+  });
+  list.addEventListener("dragleave", function(e){
+    if(!list.contains(e.relatedTarget)) list.classList.remove("drop-hot");
+  });
+  list.addEventListener("drop", function(e){
+    e.preventDefault();
+    list.classList.remove("drop-hot");
+    var id = dragId || Number(e.dataTransfer.getData("text/plain"));
+    var it = findItem(id);
+    if(it && it.status !== "inbox"){ moveItem(id,"inbox"); renderAll(); flashExisting(id); }
+  });
+})();
 
 /* завершение → леджер. С ритуалом: карточка обугливается и рассыпается пеплом */
 var newLedgerIds = {};
@@ -1532,7 +1722,6 @@ function ledgerRow(it){
 
 function renderLedger(){
   var all = byStatus("done");
-  $("#doneCount").textContent = all.length;
 
   var flt = $("#ledgerFilters");
   flt.innerHTML = "";
@@ -1567,11 +1756,17 @@ function renderLedger(){
   var list = $("#ledgerList");
   list.innerHTML = "";
   var rows = ledgerFiltered();
+  if(filterQuery) rows = rows.filter(matchesFilter);
+  $("#doneCount").textContent = filterQuery ? rows.length + "/" + all.length : all.length;
   if(rows.length === 0){
     var e = el("div","empty-ledger");
     e.appendChild(el("span","el-rail"));
-    e.appendChild(el("div","empty-title","первая запись появится здесь"));
-    e.appendChild(el("div","empty-sub","дата · аккаунты · результат"));
+    if(filterQuery){
+      e.appendChild(el("div","empty-title","в леджере по «" + filterQuery + "» пусто"));
+    } else {
+      e.appendChild(el("div","empty-title","первая запись появится здесь"));
+      e.appendChild(el("div","empty-sub","дата · аккаунты · результат"));
+    }
     list.appendChild(e);
     return;
   }
@@ -1596,7 +1791,8 @@ var focusOpen = false, focusIdx = 0;
 
 function focusPool(){
   var w = byStatus("work");
-  if(w.length) return { list: w, from: "work" };
+  /* горящее по дедлайну — первым в фокусе */
+  if(w.length) return { list: w.slice().sort(function(a,b){ return (a.deadline||9e15)-(b.deadline||9e15); }), from: "work" };
   return { list: byStatus("inbox"), from: "inbox" };
 }
 function openFocus(){
@@ -1646,6 +1842,8 @@ function renderFocus(){
     meta.appendChild(a);
   }
   meta.appendChild(el("span","tag",ageLabel(it.createdAt)));
+  var fdl = deadlineTagEl(it);
+  if(fdl) meta.appendChild(fdl);
   box.appendChild(meta);
 
   box.appendChild(accRowFor(it));
@@ -1710,6 +1908,17 @@ $("#drawerOverlay").addEventListener("click", closeDrawer);
 function renderDrawer(){
   var list = $("#accList");
   list.innerHTML = "";
+  /* возраст резервной копии — виден при любом раскладе */
+  var le = $("#exportAge");
+  if(le){
+    if(state.lastExport){
+      var dd = Math.floor((dayStart(Date.now()) - dayStart(state.lastExport)) / 86400000);
+      le.textContent = dd <= 0 ? "резервная копия: сегодня" : ("резервная копия: " + dd + " дн назад" + (dd > 7 ? " — пора обновить" : ""));
+      le.style.color = dd > 7 ? "var(--red)" : "";
+    } else {
+      le.textContent = "резервной копии ещё не было — выгрузи JSON";
+    }
+  }
   if(state.accounts.length === 0){
     list.appendChild(el("p","dr-note","Пока пусто. Добавь первый аккаунт фермы."));
     return;
@@ -1776,6 +1985,25 @@ $("#accWallet").addEventListener("keydown", function(e){
 /* ================= ввод ================= */
 var quickInput = $("#quickInput");
 
+/* строка захвата — ещё и живой фильтр: печатаешь без Enter, доска сужается */
+var filterQuery = "";
+function matchesFilter(it){
+  if(!filterQuery) return true;
+  var hay = (it.title + " " + (it.handle||"") + " " + (it.url||"") + " " + (it.notes||"")).toLowerCase();
+  var toks = filterQuery.split(/\s+/);
+  for(var i=0;i<toks.length;i++) if(hay.indexOf(toks[i]) === -1) return false;
+  return true;
+}
+quickInput.addEventListener("input", function(){
+  filterQuery = quickInput.value.trim().toLowerCase();
+  renderBoard();
+  renderLedger();
+});
+
+function normUrl(u){
+  if(!u) return "";
+  return u.toLowerCase().replace(/^https?:\/\//,"").replace(/^www\./,"").replace(/\/+$/,"");
+}
 function findDuplicate(parsed){
   if(parsed.tweetId){
     for(var i=0;i<state.items.length;i++)
@@ -1785,6 +2013,12 @@ function findDuplicate(parsed){
     var h = parsed.handle.toLowerCase();
     for(var j=0;j<state.items.length;j++)
       if(state.items[j].handle && state.items[j].handle.toLowerCase() === h) return state.items[j];
+  }
+  /* обычные ссылки: дедуп по нормализованному URL, иначе один сайт плодит карточки */
+  if(parsed.url){
+    var nu = normUrl(parsed.url);
+    for(var k=0;k<state.items.length;k++)
+      if(state.items[k].url && normUrl(state.items[k].url) === nu) return state.items[k];
   }
   return null;
 }
@@ -1833,7 +2067,7 @@ function submitQuick(){
   var tokens = v.split(/\s+/).filter(Boolean);
   if(tokens.length > 1 && tokens.every(function(t){ return LINKY.test(t); })){
     var r = bulkAdd(v);
-    quickInput.value = "";
+    quickInput.value = ""; filterQuery = "";
     renderAll();
     var bar = $("#captureBar");
     bar.classList.add("ok");
@@ -1847,7 +2081,7 @@ function submitQuick(){
     var linky = extractLinky(v);
     if(linky.length >= 2){
       var rr = bulkAdd(linky.join(" "));
-      quickInput.value = "";
+      quickInput.value = ""; filterQuery = "";
       renderAll();
       var bar2 = $("#captureBar");
       bar2.classList.add("ok");
@@ -1859,7 +2093,7 @@ function submitQuick(){
   }
   var parsed = parseInput(v);
   var dup = findDuplicate(parsed);
-  quickInput.value = "";
+  quickInput.value = ""; filterQuery = "";
   if(dup){
     renderAll();
     showToast("Уже есть: " + dup.title, null);
@@ -1892,6 +2126,30 @@ document.addEventListener("keydown", function(e){
     closePop();
     if(focusOpen) closeFocus();
     closeDrawer();
+    if(quickInput.value){ quickInput.value = ""; filterQuery = ""; renderAll(); }
+    return;
+  }
+  /* «одно дело» без мыши: стрелки листают, Enter закрывает дело */
+  if(focusOpen && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){
+    var pool = focusPool();
+    if(e.key === "ArrowRight" || e.key === "ArrowLeft"){
+      e.preventDefault();
+      if(pool.list.length){
+        focusIdx = (focusIdx + (e.key === "ArrowRight" ? 1 : pool.list.length - 1)) % pool.list.length;
+        renderFocus();
+      }
+    } else if(e.key === "Enter"){
+      e.preventDefault();
+      var cur = pool.list[focusIdx];
+      if(!cur) return;
+      if(pool.from === "work"){
+        completeItem(cur.id, document.querySelector(".focus-card"));
+        setTimeout(function(){ if(focusPool().list.length === 0) closeFocus(); }, 240);
+      } else {
+        moveItem(cur.id,"work");
+        renderAll();
+      }
+    }
   }
 });
 
@@ -1906,6 +2164,8 @@ document.addEventListener("paste", function(e){
     if(focusOpen) closeFocus();
     closeDrawer();
     quickInput.value = linky.join(" ");
+    filterQuery = quickInput.value.trim().toLowerCase();
+    renderBoard(); renderLedger();
     quickInput.focus();
     quickInput.setSelectionRange(quickInput.value.length, quickInput.value.length);
   }
@@ -1913,6 +2173,7 @@ document.addEventListener("paste", function(e){
 
 /* ================= экспорт / импорт ================= */
 $("#exportBtn").addEventListener("click", function(){
+  state.lastExport = Date.now(); save();
   var blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1953,6 +2214,8 @@ $("#importFile").addEventListener("change", function(e){
     try{
       var parsed = JSON.parse(r.result);
       if(parsed && Array.isArray(parsed.items) && Array.isArray(parsed.accounts)){
+        if((state.items.length || state.accounts.length) &&
+           !confirm("Заменить текущие " + state.items.length + " проектов и " + state.accounts.length + " аккаунтов данными из файла (" + parsed.items.length + " проектов, " + parsed.accounts.length + " аккаунтов)?")) return;
         state = parsed;
         if(typeof state.seq !== "number") state.seq = 0;
         if(typeof state.accSeq !== "number") state.accSeq = 0;
@@ -2076,6 +2339,36 @@ function fxTick(){
   else { fxOn = false; fxCtx.clearRect(0, 0, fxW, fxH); }
 }
 initFx();
+
+/* пережить полночь: дата, сэкки, стрик и «сегодня» обновляются сами */
+(function tickMidnight(){
+  var n = new Date(); n.setHours(24, 1, 0, 0);
+  setTimeout(function(){ renderAll(); tickMidnight(); }, n.getTime() - Date.now());
+})();
+
+/* магнит на «выбери за меня»: в радиусе 120px кнопка тянется к курсору на четверть */
+(function(){
+  if(reducedMotion) return;
+  if(!window.matchMedia || !matchMedia("(hover:hover) and (pointer:fine)").matches) return;
+  var btn = $("#pickBtn");
+  var R = 120, K = 0.25, pending = null, scheduled = false;
+  document.addEventListener("mousemove", function(e){
+    pending = e;
+    if(scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(function(){
+      scheduled = false;
+      if(!pending) return;
+      var r = btn.getBoundingClientRect();
+      var dx = pending.clientX - (r.left + r.width/2), dy = pending.clientY - (r.top + r.height/2);
+      if(Math.hypot(dx, dy) < R){
+        btn.style.transform = "translate(" + (dx*K).toFixed(1) + "px," + (dy*K).toFixed(1) + "px)";
+      } else if(btn.style.transform){
+        btn.style.transform = "";
+      }
+    });
+  });
+})();
 
 load();
 /* при открытии дашборда карточки входят каскадом — доска «просыпается» */
