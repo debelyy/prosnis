@@ -540,11 +540,11 @@ a.handle{color:var(--ink-soft);text-decoration:none}
 @media(hover:hover){ .pop-opt:hover{background:rgba(46,48,51,.06);color:var(--ink)} }
 
 /* ---------- режим одного дела ---------- */
-#focusOverlay{
+#focusOverlay,#triageOverlay{
   position:fixed;inset:0;z-index:50;background:rgba(12,12,13,.62);
   display:none;align-items:center;justify-content:center;padding:20px;
 }
-#focusOverlay.open{display:flex}
+#focusOverlay.open,#triageOverlay.open{display:flex}
 .focus-card{
   background:var(--specks),linear-gradient(180deg,rgba(240,239,238,.94),rgba(236,235,233,.92));
   background-size:300px,auto;
@@ -582,6 +582,22 @@ a.handle{color:var(--ink-soft);text-decoration:none}
 .focus-btns .btn{border-color:var(--hairline-strong);color:var(--ink)}
 .focus-btns .btn:hover{background:rgba(46,48,51,.06)}
 .focus-empty{text-align:center;color:var(--ink-soft);font-size:13.5px;font-weight:400;padding:14px 0 4px;line-height:1.6}
+/* триаж: подсказка клавиш и превью заметок */
+.triage-keys{font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.05em;margin-top:16px;line-height:1.8}
+.triage-keys kbd{font-family:var(--mono);font-size:9.5px;border:1px solid var(--hairline);border-bottom-width:2px;border-radius:2px;padding:1px 6px;background:rgba(250,249,247,.6);color:var(--ink-soft)}
+.triage-notes{margin-top:12px;padding:10px 12px;border:1px solid var(--hairline-soft);border-radius:2px;background:rgba(250,249,247,.5);font-size:12.5px;color:var(--ink-soft);line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:96px;overflow:hidden}
+/* следующий шаг — verb-first строка на карточке */
+.step-line{display:flex;align-items:baseline;gap:6px;margin-top:7px;font-size:12px;font-weight:500;color:var(--ink);cursor:text;border-radius:2px;padding:2px 4px;margin-left:-4px;min-width:0}
+.step-line .step-ic{color:var(--ink-faint);flex:none;position:relative;top:1px}
+.step-line.empty{color:var(--ink-faint);font-weight:400}
+.step-line .step-txt{word-break:break-word;min-width:0}
+@media(hover:hover){ .step-line:hover{background:rgba(46,48,51,.06)} }
+input.step-edit{width:100%;background:rgba(250,249,247,.8);border:1px solid var(--hairline-strong);border-radius:2px;outline:none;color:var(--ink);font-size:12px;padding:3px 7px;min-width:0}
+/* страховки стрика — полые щитки рядом с угольком */
+.freeze-dot{display:inline-block;width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(237,236,235,.55);margin-left:5px;vertical-align:1px}
+.dr-stats{font-family:var(--mono);font-size:11px;color:var(--ink-soft);line-height:1.7;border:1px solid var(--hairline-soft);border-radius:2px;padding:8px 10px;background:rgba(250,249,247,.5)}
+/* пиксельный портрет вместо токен-арта */
+.identi img.pix{display:block;width:100%;height:100%;image-rendering:pixelated;object-fit:cover}
 #focusClose{
   position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:2px;
   border:1px solid var(--hairline);background:transparent;color:var(--ink-faint);font-size:12px;
@@ -688,8 +704,8 @@ a.handle{color:var(--ink-soft);text-decoration:none}
         <div class="lbl">сегодня в леджере</div>
         <div class="num"><em id="doneTodayCount">0</em></div>
       </div>
-      <div class="stat hidden" id="streakStat" title="Дней подряд с хотя бы одной записью в леджере">
-        <div class="lbl">серия дней<span class="ember" id="streakEmber"></span></div>
+      <div class="stat hidden" id="streakStat" title="Дней подряд с хотя бы одной записью в леджере. Полые кружки — страховки от пропуска">
+        <div class="lbl">серия дней<span class="ember" id="streakEmber"></span><span id="freezeDots"></span></div>
         <div class="num" id="streakCount">0</div>
       </div>
       <div class="stat hot hidden" id="hotStat" title="Дедлайн сегодня или уже просрочен">
@@ -712,6 +728,7 @@ a.handle{color:var(--ink-soft);text-decoration:none}
     <section class="col">
       <div class="col-head">
         <span class="zi">01</span><h2>Инбокс</h2><span class="count" id="inboxCount">0</span>
+        <button class="mini-btn col-tool" id="triageBtn" title="Разобрать инбокс по одной карточке: 1 — в работу, 2 — дальше, 3 — удалить"><svg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style="vertical-align:-1px"><polyline points='3 6 5 6 21 6'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/></svg> разобрать</button>
       </div>
       <div class="col-sub">свежие дропы — тяни в слот или разбери потом</div>
       <div class="col-body" id="inboxList"></div>
@@ -748,6 +765,14 @@ a.handle{color:var(--ink-soft);text-decoration:none}
   </div>
 </div>
 
+<div id="triageOverlay">
+  <div class="focus-card">
+    <span class="fk tl"></span><span class="fk tr"></span><span class="fk bl"></span><span class="fk br"></span>
+    <button id="triageClose" title="Закрыть (Esc)"><svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 6 6 18'/><path d='m6 6 12 12'/></svg></button>
+    <div id="triageContent"></div>
+  </div>
+</div>
+
 <div id="drawerOverlay"></div>
 <aside id="drawer">
   <button id="drawerClose" title="Закрыть (Esc)"><svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 6 6 18'/><path d='m6 6 12 12'/></svg></button>
@@ -763,6 +788,7 @@ a.handle{color:var(--ink-soft);text-decoration:none}
   </section>
   <section>
     <h3>Данные</h3>
+    <div class="dr-stats" id="drawerStats" style="margin-bottom:10px"></div>
     <div class="dr-stack">
       <button class="btn" id="exportBtn"><svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 15V3'/><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='m7 10 5 5 5-5'/></svg>Выгрузить JSON</button>
       <button class="btn" id="importBtn"><svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3v12'/><path d='m17 8-5-5-5 5'/><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/></svg>Загрузить JSON</button>
@@ -793,6 +819,9 @@ function load(){
   }catch(e){}
   if(typeof state.seq !== "number") state.seq = 0;
   if(typeof state.accSeq !== "number") state.accSeq = 0;
+  if(typeof state.freezes !== "number") state.freezes = 0;
+  if(typeof state.freezeAwarded !== "number") state.freezeAwarded = 0;
+  if(typeof state.bestStreak !== "number") state.bestStreak = 0;
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 
@@ -826,8 +855,10 @@ function hueFor(s){
   for(var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) % 360;
   return h;
 }
-/* детерминированный токен-арт (jazzicon-подобный): 5×5, зеркально, два оттенка от хеша */
-function identiconEl(seed, size){
+/* пиксельный портрет из локального пака (assets/pixels), детерминированно по seed;
+   нет файла (офлайн, нет пакета) — фолбэк на старый токен-арт */
+var PIXEL_COUNT = 24;
+function jazziconHTML(seed, size){
   var s = 0;
   for(var i=0;i<seed.length;i++) s = (s*31 + seed.charCodeAt(i)) >>> 0;
   function rnd(){ s ^= s<<13; s>>>=0; s ^= s>>17; s ^= s<<5; s>>>=0; return s/4294967296; }
@@ -842,9 +873,25 @@ function identiconEl(seed, size){
       }
     }
   }
+  return "<svg xmlns='http://www.w3.org/2000/svg' width='"+size+"' height='"+size+"' viewBox='0 0 "+size+" "+size+"'>"+cells+"</svg>";
+}
+function identiconEl(seed, size){
+  var h = 0;
+  for(var i=0;i<seed.length;i++) h = (h*31 + seed.charCodeAt(i)) >>> 0;
+  var n = (h % PIXEL_COUNT) + 1;
   var sp = document.createElement("span");
   sp.className = "identi";
-  sp.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' width='"+size+"' height='"+size+"' viewBox='0 0 "+size+" "+size+"'>"+cells+"</svg>";
+  var img = document.createElement("img");
+  img.className = "pix";
+  img.width = size; img.height = size;
+  img.alt = "";
+  img.loading = "lazy";
+  img.src = "assets/pixels/p" + ("0"+n).slice(-2) + ".png";
+  img.onerror = function(){
+    img.remove();
+    sp.innerHTML = jazziconHTML(seed, size);
+  };
+  sp.appendChild(img);
   return sp;
 }
 function identSeed(it){ return (it.handle || it.title || "drop") + "#" + it.id; }
@@ -917,6 +964,7 @@ function addItem(data){
     accounts: [],
     result: null,
     notes: "",
+    nextStep: "",
     deadline: null,
     createdAt: Date.now(),
     workAt: null,
@@ -1207,6 +1255,23 @@ function openDeadlinePop(anchor, it){
   openPop(anchor, p);
 }
 
+/* серия дней со страховками: пропуск покрывается freeze, пока они есть (earned, cap 2) */
+function computeStreak(){
+  var days = {};
+  state.items.forEach(function(it){
+    if(it.status === "done" && it.doneAt) days[dayStart(it.doneAt)] = true;
+  });
+  var streak = 0, cursor = dayStart(Date.now()), frozen = 0;
+  if(!days[cursor]) cursor -= 86400000;
+  var owned = state.freezes || 0;
+  while(true){
+    if(days[cursor]){ streak++; cursor -= 86400000; }
+    else if(frozen < owned){ frozen++; cursor -= 86400000; }
+    else break;
+  }
+  return { streak: streak, frozen: frozen };
+}
+
 /* ================= рендер: шапка ================= */
 function renderHeader(){
   var doneToday = state.items.filter(function(it){
@@ -1221,16 +1286,23 @@ function renderHeader(){
   $("#hotStat").classList.toggle("hidden", hot === 0);
   $("#hotCount").textContent = hot;
 
-  var days = {};
-  state.items.forEach(function(it){
-    if(it.status === "done" && it.doneAt) days[dayStart(it.doneAt)] = true;
-  });
-  var streak = 0, cursor = dayStart(Date.now());
-  if(!days[cursor]) cursor -= 86400000;
-  while(days[cursor]){ streak++; cursor -= 86400000; }
+  var st = computeStreak();
+  var streak = st.streak;
+  /* начисление страховки за каждые 7 дней серии (earned, не paid) */
+  var milestone = Math.floor(streak / 7);
+  if(milestone > state.freezeAwarded){
+    state.freezeAwarded = milestone;
+    if(state.freezes < 2){ state.freezes++; }
+    save();
+  }
+  if(streak > state.bestStreak){ state.bestStreak = streak; save(); }
   /* серия показывается только от двух дней — ноль не наказывает */
   $("#streakStat").classList.toggle("hidden", streak < 2);
   $("#streakCount").textContent = streak;
+  var fd = $("#freezeDots");
+  fd.innerHTML = "";
+  var avail = Math.max(0, (state.freezes || 0) - st.frozen);
+  for(var fz = 0; fz < avail; fz++) fd.appendChild(el("span","freeze-dot"));
   var heat = Math.min(streak, 7) / 7;
   var emberEl = $("#streakEmber");
   emberEl.style.setProperty("--emin", (0.25 + 0.3 * heat).toFixed(2));
@@ -1341,6 +1413,42 @@ function titleEl(it){
   return t;
 }
 
+/* verb-first следующий шаг (implementation intention): карточка хранит план, а не название */
+function stepLineEl(it){
+  var has = !!(it.nextStep && it.nextStep.trim());
+  var s = el("div","step-line" + (has ? "" : " empty"));
+  var ic = el("span","step-ic");
+  ic.appendChild(icon("arrow-right",10));
+  s.appendChild(ic);
+  var txt = el("span","step-txt", has ? it.nextStep : "следующий шаг…");
+  s.appendChild(txt);
+  s.title = "Клик — задать следующий физический шаг";
+  s.addEventListener("click", function(e){
+    e.stopPropagation();
+    var inp = document.createElement("input");
+    inp.className = "step-edit";
+    inp.value = it.nextStep || "";
+    inp.placeholder = "что конкретно делаешь первым делом…";
+    txt.replaceWith(inp);
+    inp.focus();
+    inp.setSelectionRange(inp.value.length, inp.value.length);
+    var done = false;
+    function commit(saveIt){
+      if(done) return; done = true;
+      if(saveIt){ it.nextStep = inp.value.trim(); save(); }
+      renderAll();
+    }
+    inp.addEventListener("keydown", function(ev){
+      ev.stopPropagation();
+      if(ev.key === "Enter") commit(true);
+      if(ev.key === "Escape") commit(false);
+    });
+    inp.addEventListener("click", function(ev){ ev.stopPropagation(); });
+    inp.addEventListener("blur", function(){ commit(true); });
+  });
+  return s;
+}
+
 function cardEl(it, inSlot){
   var c = el("article","card" + (inSlot ? " in-slot" : ""));
   c.dataset.id = it.id;
@@ -1385,6 +1493,7 @@ function cardEl(it, inSlot){
     meta.appendChild(nt);
   }
   c.appendChild(meta);
+  c.appendChild(stepLineEl(it));
 
   if(inSlot){
     c.appendChild(accRowFor(it));
@@ -1849,6 +1958,18 @@ function renderFocus(){
   box.appendChild(accRowFor(it));
   box.appendChild(resRowFor(it));
 
+  var stepWrap = el("div");
+  var stepLab = el("div","acc-label","следующий шаг");
+  stepLab.style.marginTop = "14px";
+  stepWrap.appendChild(stepLab);
+  var si = document.createElement("input");
+  si.className = "dr-input";
+  si.value = it.nextStep || "";
+  si.placeholder = "что конкретно делаешь первым делом…";
+  si.addEventListener("input", function(){ it.nextStep = si.value; save(); });
+  stepWrap.appendChild(si);
+  box.appendChild(stepWrap);
+
   var notesWrap = el("div",null);
   notesWrap.id = "focusNotes";
   var ta = document.createElement("textarea");
@@ -1890,6 +2011,130 @@ function renderFocus(){
   box.appendChild(btns);
 }
 
+/* ================= триаж инбокса =================
+   одна карточка + малый набор исходов + авто-переход (Linear Triage / Superhuman flow) */
+var triageOpen = false, triageIdx = 0;
+
+function openTriage(){
+  if(byStatus("inbox").length === 0){
+    showToast("Инбокс пуст — разбирать нечего", null);
+    return;
+  }
+  triageOpen = true; triageIdx = 0;
+  $("#triageOverlay").classList.add("open");
+  renderTriage();
+}
+function closeTriage(){
+  triageOpen = false;
+  $("#triageOverlay").classList.remove("open");
+}
+$("#triageBtn").addEventListener("click", openTriage);
+$("#triageClose").addEventListener("click", closeTriage);
+$("#triageOverlay").addEventListener("click", function(e){
+  if(e.target === this) closeTriage();
+});
+
+function renderTriage(){
+  var box = $("#triageContent");
+  box.innerHTML = "";
+  var pool = byStatus("inbox");
+
+  if(pool.length === 0){
+    box.appendChild(el("div","focus-kicker","триаж"));
+    var em = el("div","focus-empty");
+    em.textContent = "Инбокс чист. Всё разобрано.";
+    box.appendChild(em);
+    return;
+  }
+  if(triageIdx >= pool.length) triageIdx = 0;
+  var it = pool[triageIdx];
+
+  box.appendChild(el("div","focus-kicker",
+    "триаж инбокса · " + (triageIdx+1) + "/" + pool.length));
+
+  var ftop = el("div","card-top");
+  ftop.style.alignItems = "center";
+  ftop.appendChild(identiconEl(identSeed(it), 40));
+  ftop.appendChild(el("div","focus-title",it.title));
+  box.appendChild(ftop);
+
+  var meta = el("div","card-meta");
+  if(it.handle && it.url){
+    var a = el("a","tag handle",it.handle);
+    a.href = it.url; a.target = "_blank"; a.rel = "noopener";
+    meta.appendChild(a);
+  }
+  meta.appendChild(el("span","tag",ageLabel(it.createdAt)));
+  var tdl = deadlineTagEl(it);
+  if(tdl) meta.appendChild(tdl);
+  box.appendChild(meta);
+
+  if(it.notes && it.notes.trim()){
+    box.appendChild(el("div","triage-notes", it.notes.trim().split("\n").slice(0,3).join("\n")));
+  }
+
+  var btns = el("div","focus-btns");
+  var take = el("button","big-take");
+  take.appendChild(icon("arrow-right",14));
+  take.appendChild(document.createTextNode("В работу"));
+  take.addEventListener("click", function(){
+    moveItem(it.id,"work");
+    renderAll();
+  });
+  btns.appendChild(take);
+  var skip = el("button","btn");
+  skip.appendChild(document.createTextNode("дальше"));
+  skip.addEventListener("click", function(){
+    triageIdx = (triageIdx + 1) % byStatus("inbox").length;
+    renderTriage();
+  });
+  btns.appendChild(skip);
+  var del = el("button","btn");
+  del.appendChild(document.createTextNode("удалить"));
+  del.addEventListener("click", function(){ triageDelete(it); });
+  btns.appendChild(del);
+  box.appendChild(btns);
+
+  var keys = el("div","triage-keys");
+  [["1","в работу"],["2","дальше"],["3","удалить"],["←/→","листать"],["esc","выйти"]].forEach(function(p, i){
+    if(i) keys.appendChild(document.createTextNode("  ·  "));
+    var k = document.createElement("kbd"); k.textContent = p[0];
+    keys.appendChild(k);
+    keys.appendChild(document.createTextNode(" " + p[1]));
+  });
+  box.appendChild(keys);
+}
+
+function triageDelete(it){
+  var removed = removeItem(it.id);
+  if(!removed) return;
+  renderAll();
+  showToast("Удалено: " + removed.item.title, function(){
+    state.items.splice(Math.min(removed.index, state.items.length), 0, removed.item);
+    if(removed.item.id > state.seq) state.seq = removed.item.id;
+    save();
+  });
+}
+
+function triageKey(e){
+  var pool = byStatus("inbox");
+  if(e.key === "1" || e.key === "Enter"){
+    e.preventDefault();
+    var cur = pool[triageIdx];
+    if(cur){ moveItem(cur.id,"work"); renderAll(); }
+  } else if(e.key === "2" || e.key === "ArrowRight"){
+    e.preventDefault();
+    if(pool.length){ triageIdx = (triageIdx + 1) % pool.length; renderTriage(); }
+  } else if(e.key === "ArrowLeft"){
+    e.preventDefault();
+    if(pool.length){ triageIdx = (triageIdx - 1 + pool.length) % pool.length; renderTriage(); }
+  } else if(e.key === "3" || e.key === "Delete" || e.key === "Backspace"){
+    e.preventDefault();
+    var cur2 = pool[triageIdx];
+    if(cur2) triageDelete(cur2);
+  }
+}
+
 /* ================= ящик настроек ================= */
 function openDrawer(){
   $("#drawer").classList.add("open");
@@ -1908,6 +2153,14 @@ $("#drawerOverlay").addEventListener("click", closeDrawer);
 function renderDrawer(){
   var list = $("#accList");
   list.innerHTML = "";
+  /* накопленное навсегда: прогресс, который невидим — не существует */
+  var stEl = $("#drawerStats");
+  if(stEl){
+    var st2 = computeStreak();
+    stEl.textContent = "всего в леджере: " + byStatus("done").length +
+      " · лучшая серия: " + (state.bestStreak || 0) + " дн" +
+      " · страховок: " + Math.max(0, (state.freezes || 0) - st2.frozen) + "/2";
+  }
   /* возраст резервной копии — виден при любом раскладе */
   var le = $("#exportAge");
   if(le){
@@ -2119,14 +2372,21 @@ document.addEventListener("keydown", function(e){
   if(e.key === "/" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){
     e.preventDefault();
     if(focusOpen) closeFocus();
+    if(triageOpen) closeTriage();
     closeDrawer();
     quickInput.focus();
   }
   if(e.key === "Escape"){
     closePop();
     if(focusOpen) closeFocus();
+    if(triageOpen) closeTriage();
     closeDrawer();
     if(quickInput.value){ quickInput.value = ""; filterQuery = ""; renderAll(); }
+    return;
+  }
+  /* триаж: одна карточка, клавиши-исходы */
+  if(triageOpen && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){
+    triageKey(e);
     return;
   }
   /* «одно дело» без мыши: стрелки листают, Enter закрывает дело */
@@ -2240,6 +2500,7 @@ function renderAll(){
   renderLedger();
   if($("#drawer").classList.contains("open")) renderDrawer();
   if(focusOpen) renderFocus();
+  if(triageOpen) renderTriage();
 }
 
 /* шрифты — неблокирующе; без CDN остаются системные */
