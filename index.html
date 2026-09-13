@@ -982,6 +982,55 @@ function enrichFromTweet(item){
     .catch(function(){ clearTimeout(timer); });
 }
 
+/* дал ссылку на пост → все @handle и внешние ссылки из него падают в инбокс пачкой */
+function harvestTweet(item){
+  if(!item.tweetId || !item.url) return;
+  var ctrl = new AbortController();
+  var timer = setTimeout(function(){ ctrl.abort(); }, 7000);
+  fetch("https://publish.twitter.com/oembed?url=" + encodeURIComponent(item.url), { signal: ctrl.signal })
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(j){
+      clearTimeout(timer);
+      if(!j.html) return;
+      var doc = document.createElement("div");
+      doc.innerHTML = j.html;
+      var seen = {}, found = [];
+      doc.querySelectorAll("a[href]").forEach(function(a){
+        var href = a.href;
+        var hm = href.match(/(?:twitter\.com|x\.com)\/([A-Za-z0-9_]{1,15})(?:[/?#]|$)/i);
+        if(hm){
+          if(/^(home|i|search|explore|hashtag|settings|status)$/i.test(hm[1])) return;
+          var h = "@" + hm[1];
+          if(item.handle && h.toLowerCase() === item.handle.toLowerCase()) return; /* сам автор поста */
+          if(!seen[h]){ seen[h] = true; found.push(h); }
+          return;
+        }
+        /* t.co-обёртки: берём домен из текста ссылки; если текст — сам t.co, резолвить нечем, пропускаем */
+        if(/^https?:\/\/t\.co\//.test(href)){
+          var txt = (a.textContent || "").trim();
+          var dm = txt.match(/^([a-z0-9-]+(?:\.[a-z0-9-]+)+)(\/[^\s…]*)?/i);
+          if(dm && dm[1] !== "t.co" && !/^(pic\.)?twitter\.com$/i.test(dm[1]) && dm[1] !== "x.com"){
+            var u = "https://" + dm[0];
+            if(!seen[u]){ seen[u] = true; found.push(u); }
+          }
+        }
+      });
+      var added = 0, dups = 0;
+      found.forEach(function(t){
+        var parsed = parseInput(t);
+        if(findDuplicate(parsed)){ dups++; return; }
+        var it2 = addItem(parsed);
+        freshIds[it2.id] = true;
+        added++;
+      });
+      if(added || dups){
+        renderAll();
+        showToast("Из поста " + (item.handle || "твита") + ": +" + added + (dups ? " · дублей пропущено: " + dups : ""), null);
+      }
+    })
+    .catch(function(){ clearTimeout(timer); });
+}
+
 /* ================= тост с отменой (≤5 сек) ================= */
 var toastTimer = null, undoFn = null;
 function showToast(text, onUndo){
@@ -1749,6 +1798,19 @@ function flashExisting(id){
 }
 
 var LINKY = /^(?:https?:\/\/)?(?:www\.)?(?:x\.com|twitter\.com)\/\S+$|^@?[A-Za-z0-9_]{1,15}$|^(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+\/\S*$/i;
+/* сбор из свободного текста: @handle только с явной собакой, URL — с доменом (иначе каждое слово — «хендл») */
+var HARVESTY = /^@[A-Za-z0-9_]{1,15}$|^(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/\S*)?$/i;
+function extractLinky(text){
+  var out = [], seen = {};
+  text.split(/\s+/).forEach(function(tok){
+    var t = tok.replace(/^[(\[<"«]+|[)\].>"»,;:!?…]+$/g, "");
+    if(!HARVESTY.test(t)) return;
+    if(/^pic\.twitter\.com\//i.test(t)) return; /* медиа-заглушки не несём */
+    if(seen[t]) return;
+    seen[t] = true; out.push(t);
+  });
+  return out;
+}
 
 function bulkAdd(text){
   var tokens = text.split(/\s+/).filter(Boolean);
@@ -1759,7 +1821,7 @@ function bulkAdd(text){
     var it = addItem(parsed);
     freshIds[it.id] = true;
     added++;
-    if(parsed.tweetId) enrichFromTweet(it);
+    if(parsed.tweetId){ enrichFromTweet(it); harvestTweet(it); }
   });
   return { added: added, dups: dups };
 }
@@ -1780,6 +1842,21 @@ function submitQuick(){
     quickInput.focus();
     return;
   }
+  /* текст поста/треда целиком — вытаскиваем из него все @handle и ссылки */
+  if(tokens.length > 1){
+    var linky = extractLinky(v);
+    if(linky.length >= 2){
+      var rr = bulkAdd(linky.join(" "));
+      quickInput.value = "";
+      renderAll();
+      var bar2 = $("#captureBar");
+      bar2.classList.add("ok");
+      setTimeout(function(){ bar2.classList.remove("ok"); }, 450);
+      showToast("Из текста: +" + rr.added + (rr.dups ? " · дублей пропущено: " + rr.dups : ""), null);
+      quickInput.focus();
+      return;
+    }
+  }
   var parsed = parseInput(v);
   var dup = findDuplicate(parsed);
   quickInput.value = "";
@@ -1797,7 +1874,7 @@ function submitQuick(){
   bar.classList.add("ok");
   setTimeout(function(){ bar.classList.remove("ok"); }, 450);
   quickInput.focus();
-  if(parsed.tweetId) enrichFromTweet(it);
+  if(parsed.tweetId){ enrichFromTweet(it); harvestTweet(it); }
 }
 $("#addBtn").addEventListener("click", submitQuick);
 quickInput.addEventListener("keydown", function(e){
@@ -1818,19 +1895,17 @@ document.addEventListener("keydown", function(e){
   }
 });
 
-/* вставка в любом месте — летит в строку захвата (одна ссылка или пачка) */
+/* вставка в любом месте — ссылки и @handle из текста летят в строку захвата (одна ссылка или пачка, даже из прозы) */
 document.addEventListener("paste", function(e){
   if(/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
   var t = (e.clipboardData || window.clipboardData).getData("text");
   if(!t) return;
-  var tt = t.trim();
-  var tokens = tt.split(/\s+/).filter(Boolean);
-  var linkish = tokens.filter(function(x){ return LINKY.test(x); }).length;
-  if(linkish > 0 && linkish >= tokens.length * 0.6){
+  var linky = extractLinky(t);
+  if(linky.length >= 2 || (linky.length === 1 && linky[0].length >= t.trim().length * 0.6)){
     e.preventDefault();
     if(focusOpen) closeFocus();
     closeDrawer();
-    quickInput.value = tt;
+    quickInput.value = linky.join(" ");
     quickInput.focus();
     quickInput.setSelectionRange(quickInput.value.length, quickInput.value.length);
   }
@@ -1862,7 +1937,7 @@ $("#importTxtFile").addEventListener("change", function(e){
       var it = addItem(parsed);
       freshIds[it.id] = true;
       added++;
-      if(parsed.tweetId) enrichFromTweet(it);
+      if(parsed.tweetId){ enrichFromTweet(it); harvestTweet(it); }
     });
     renderAll();
     showToast("Из txt: +" + added + (dups ? " · дублей пропущено: " + dups : ""), null);
